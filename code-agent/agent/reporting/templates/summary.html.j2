@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Summary — {{ week_label }}</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #212529;
+           background: #fff; padding: 24px 32px; max-width: 800px; margin: 0 auto; }
+    h1  { font-size: 1.3rem; border-bottom: 2px solid #dee2e6; padding-bottom: 8px; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+    .kpi { border: 1px solid #dee2e6; border-radius: 6px; padding: 12px; text-align: center; }
+    .kpi-label { font-size: 10px; text-transform: uppercase; color: #888; }
+    .kpi-value { font-size: 1.6rem; font-weight: 700; }
+    .kpi-high   { color: #dc3545; }
+    .kpi-ok     { color: #198754; }
+    .kpi-warn   { color: #fd7e14; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+    th { text-align: left; padding: 6px 8px; background: #f8f9fa; border-bottom: 2px solid #dee2e6; font-size: 11px; }
+    td { padding: 5px 8px; border-bottom: 1px solid #f0f0f0; }
+    .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+    .badge-H { background: #f8d7da; color: #58151c; }
+    .badge-M { background: #fff3cd; color: #664d03; }
+    .badge-L { background: #d1e7dd; color: #0a3622; }
+    .issues { font-size: 11px; color: #666; margin-top: 8px; }
+    .issues li { margin: 2px 0; }
+  </style>
+</head>
+<body>
+  <h1>Code Analysis Summary &nbsp;<small style="font-weight:400; font-size:0.85rem; color:#888">{{ week_label }} — {{ report_date }}</small></h1>
+
+  <div class="grid">
+    <div class="kpi">
+      <div class="kpi-label">Java Coverage</div>
+      <div class="kpi-value {% if data.avg_java_coverage() >= target_pct %}kpi-ok{% else %}kpi-warn{% endif %}">
+        {{ "%.0f"|format(data.avg_java_coverage()) }}%
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Python Coverage</div>
+      <div class="kpi-value {% if data.avg_python_coverage() >= target_pct %}kpi-ok{% else %}kpi-warn{% endif %}">
+        {{ "%.0f"|format(data.avg_python_coverage()) }}%
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">HIGH Vulns</div>
+      <div class="kpi-value {% if data.vuln_findings | selectattr('severity','eq','HIGH') | list | length > 0 %}kpi-high{% else %}kpi-ok{% endif %}">
+        {{ data.vuln_findings | selectattr('severity','eq','HIGH') | list | length }}
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Logic Errors</div>
+      <div class="kpi-value {% if data.logic_findings | length > 5 %}kpi-warn{% else %}kpi-ok{% endif %}">
+        {{ data.logic_findings | length }}
+      </div>
+    </div>
+  </div>
+
+  <h2 style="font-size:1rem; margin-top:20px;">Top Vulnerabilities</h2>
+  {% set top_vulns = data.vuln_findings[:10] %}
+  {% if top_vulns %}
+  <table>
+    <thead><tr><th>Sev</th><th>Tool</th><th>File</th><th>Description</th></tr></thead>
+    <tbody>
+    {% for f in top_vulns %}
+      <tr>
+        <td><span class="badge badge-{{ f.severity[0] }}">{{ f.severity }}</span></td>
+        <td>{{ f.tool }}</td>
+        <td style="font-family:monospace; font-size:11px;">{{ f.file | truncate(40) }}</td>
+        <td>{{ f.description | truncate(80) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#888; font-style:italic;">No vulnerability findings.</p>
+  {% endif %}
+
+  <h2 style="font-size:1rem; margin-top:20px;">Tests Generated This Run</h2>
+  <p>{{ data.generated_tests | length }} test file(s) written to output directory.</p>
+
+  {% if data.status.issues %}
+  <h2 style="font-size:1rem; margin-top:20px;">Run Issues ({{ data.status.issues | length }})</h2>
+  <ul class="issues">
+    {% for i in data.status.issues %}
+    <li>{{ i }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <p style="margin-top:20px; font-size:10px; color:#bbb; text-align:right;">
+    code-agent — {{ report_date }} — model: {{ data.status.model }}
+  </p>
+</body>
+</html>

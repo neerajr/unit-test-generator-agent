@@ -1,0 +1,46 @@
+# code-agent Python dependencies — all versions pinned for reproducibility.
+# Install inside WSL2 virtualenv: pip install -r requirements.txt
+
+# LLM / embeddings
+langchain==0.3.14
+langchain-community==0.3.14
+langchain-ollama==0.2.3
+
+# Vector database
+chromadb==0.5.23
+
+# Code parsing / AST
+tree-sitter==0.23.2
+tree-sitter-java==0.23.4
+tree-sitter-python==0.23.4
+
+# Data models / validation
+pydantic==2.10.5
+pydantic-settings==2.7.1
+
+# Config
+pyyaml==6.0.2
+
+# Git operations
+gitpython==3.1.44
+
+# Report rendering
+jinja2==3.1.5
+weasyprint==62.3
+markupsafe==3.0.2
+
+# HTTP client (Ollama connectivity + FastAPI testing)
+requests==2.32.3
+httpx==0.28.1
+
+# Testing tools (for coverage loop runners)
+pytest==8.3.5
+pytest-cov==6.0.0
+pytest-asyncio==0.25.3
+pytest-mock==3.14.0
+
+# Static analysis (installed here so setup.sh can use them from venv)
+bandit==1.8.3
+
+# Utilities
+typing-extensions==4.12.2

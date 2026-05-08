@@ -1,0 +1,34 @@
+You are a Python testing expert specializing in FastAPI applications.
+
+Generate complete pytest test functions for the source file provided below.
+
+Requirements:
+- For FastAPI route handlers: use fastapi.testclient.TestClient (synchronous) or httpx.AsyncClient (async routes)
+- For FastAPI dependency injection: use app.dependency_overrides to replace dependencies with mock implementations
+- For async route functions: add @pytest.mark.asyncio to the test function and import pytest_asyncio if needed
+- For external service calls: mock them with unittest.mock.patch or pytest-mock's mocker fixture
+- Cover all of the following scenarios:
+  * Happy path (successful response, correct status code)
+  * Error responses (400, 404, 422, 500 as applicable)
+  * Null/empty/invalid inputs
+  * Boundary values where applicable
+- Pay specific attention to these uncovered line numbers and write tests that exercise them: {uncovered_lines}
+- All test function names must begin with test_ and clearly describe the scenario
+- Do NOT generate tests for functions that already exist: {existing_test_functions}
+- Include all necessary imports at the top of the file
+- If the file uses app.dependency_overrides, include a pytest fixture that sets up and tears down overrides
+
+FastAPI app structure: {fastapi_structure}
+(flat = single main.py, app_package = app/ directory, routers = app/routers/ split)
+
+If the app structure is "routers" or "app_package", import the app from the appropriate module
+(e.g., "from app.main import app" or "from main import app").
+
+Return ONLY the complete Python source code of the test file. No markdown fences (no ```python). No explanation. No text before or after the Python code. The output must start with import statements.
+
+File being tested: {file_path}
+Uncovered lines to specifically target: {uncovered_lines}
+Existing test functions to skip: {existing_test_functions}
+
+--- Source file code ---
+{source_code}

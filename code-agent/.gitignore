@@ -1,0 +1,63 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+*.whl
+
+# Virtual environments
+.venv/
+env/
+ENV/
+
+# IDE / editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Agent runtime output — never commit generated artifacts
+agent-output/
+chromadb/
+*.log
+
+# Coverage reports
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+.cache/
+
+# Java build artifacts
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+
+# OS
+.DS_Store
+ehthumbs.db
+Desktop.ini
+
+# Secrets / local overrides
+.env
+.env.*
+*.local
+config/config.local.yaml
+
+# WeasyPrint / PDF temp files
+*.pdf

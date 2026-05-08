@@ -1,0 +1,23 @@
+# Default: normalize line endings to LF in the repo
+* text=auto eol=lf
+
+# Shell scripts must always have LF (they break with CRLF on Linux/macOS/WSL2)
+*.sh text eol=lf
+
+# PowerShell scripts: CRLF is fine on Windows
+*.ps1 text eol=crlf
+
+# Python, YAML, config: LF
+*.py  text eol=lf
+*.yaml text eol=lf
+*.yml  text eol=lf
+*.txt  text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.j2   text eol=lf
+
+# Binaries: no line ending conversion
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jar  binary

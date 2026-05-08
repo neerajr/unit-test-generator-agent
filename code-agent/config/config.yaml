@@ -1,0 +1,134 @@
+# config/config.yaml — Code-Agent configuration
+#
+# Path syntax supported everywhere:
+#   ~            → your home directory (e.g. /home/alice, C:\Users\alice)
+#   ~/some/path  → home-relative path
+#   /absolute    → literal absolute path
+#   ${VAR}       → environment variable (Linux/macOS) or %VAR% (Windows)
+#
+# Environment variable overrides — set any of these to skip editing this file:
+#   AGENT_JAVA_REPO, AGENT_PYTHON_REPO   — repo paths
+#   AGENT_OUTPUT_BASE                    — output root directory
+#   AGENT_LLM_BASE_URL, AGENT_LLM_MODEL  — Ollama endpoint and model
+#   AGENT_OLLAMA_HOST, AGENT_OLLAMA_PORT — Ollama host/port (if base_url is "auto")
+#   AGENT_PLATFORM                       — override platform detection
+#   AGENT_GPU_ENABLED, AGENT_GPU_VRAM_GB — override GPU detection
+#   AGENT_CHROMA_PATH                    — override ChromaDB location
+#   HTTP_PROXY, HTTPS_PROXY              — proxy settings
+
+# ---------------------------------------------------------------------------
+# System — platform and GPU detection
+# ---------------------------------------------------------------------------
+system:
+  # "auto" detects at runtime. Override if detection is wrong:
+  #   linux | macos | windows_wsl2 | windows_native
+  platform: "auto"
+
+  # "auto" runs nvidia-smi to detect GPU. Override: true | false
+  gpu_enabled: "auto"
+
+  # "auto" queries nvidia-smi for VRAM in GB. Override with a number, e.g.: 24
+  gpu_vram_gb: "auto"
+
+# ---------------------------------------------------------------------------
+# Environment — Ollama connectivity and tool paths
+# ---------------------------------------------------------------------------
+environment:
+  # "auto" means:
+  #   - WSL2: Windows host IP from `ip route show default`
+  #   - All other platforms: localhost
+  # Override with a literal IP or hostname if auto-detection is unreliable.
+  ollama_host: "auto"
+  ollama_port: 11434
+
+  # "auto" = find the tool via PATH. Override with an absolute path if needed.
+  python_bin: "auto"
+  java_bin:   "auto"
+  mvn_bin:    "auto"
+
+# ---------------------------------------------------------------------------
+# Repos — paths to the codebases being analyzed
+# ---------------------------------------------------------------------------
+repos:
+  java_repo_path:   "~/projects/springboot-app"   # <- EDIT THIS
+  python_repo_path: "~/projects/fastapi-app"       # <- EDIT THIS
+
+# ---------------------------------------------------------------------------
+# Output — all generated artifacts live under base_dir
+# ---------------------------------------------------------------------------
+output:
+  # Single root for all agent output. Subdirs are created automatically:
+  #   base_dir/generated-tests/java
+  #   base_dir/generated-tests/python
+  #   base_dir/reports
+  #   base_dir/chromadb
+  base_dir: "~/agent-output"
+
+  # Uncomment and set only if you need non-standard locations:
+  # java_tests_output:   "~/agent-output/generated-tests/java"
+  # python_tests_output: "~/agent-output/generated-tests/python"
+  # reports_dir:         "~/agent-output/reports"
+
+  retain_weeks: 12
+
+# ---------------------------------------------------------------------------
+# LLM — Ollama model settings
+# ---------------------------------------------------------------------------
+llm:
+  provider: "ollama"
+
+  # "auto" builds the URL from environment.ollama_host + environment.ollama_port.
+  # Override to lock in a specific URL: "http://192.168.1.100:11434"
+  base_url: "auto"
+
+  # setup.sh / setup.ps1 writes the right model here after detecting GPU VRAM:
+  #   GPU >= 24 GB  ->  qwen2.5-coder:32b
+  #   GPU >=  8 GB  ->  codellama:13b-q4
+  #   CPU / no GPU  ->  codellama:7b-q4
+  model: "codellama:7b-q4"
+
+  embed_model:     "nomic-embed-text"
+  temperature:     0.1
+  context_window:  8192
+  request_timeout: 300
+
+# ---------------------------------------------------------------------------
+# Proxy (leave empty strings if not needed)
+# ---------------------------------------------------------------------------
+proxy:
+  http_proxy:  ""
+  https_proxy: ""
+
+# ---------------------------------------------------------------------------
+# RAG / ChromaDB
+# ---------------------------------------------------------------------------
+rag:
+  # "auto" -> base_dir/chromadb
+  chroma_path:          "auto"
+  top_k:                8
+  similarity_threshold: 0.72
+  max_chunk_tokens:     350
+
+# ---------------------------------------------------------------------------
+# Coverage
+# ---------------------------------------------------------------------------
+coverage:
+  target_pct:         90
+  max_iterations:     3
+  jacoco_report_path: "target/site/jacoco/jacoco.xml"   # relative to java_repo_path
+  pytest_cov_xml:     "coverage.xml"                     # relative to python_repo_path
+
+# ---------------------------------------------------------------------------
+# Static analysis tool output directories
+# ---------------------------------------------------------------------------
+static_analysis:
+  # "auto" -> base_dir/semgrep-rules, base_dir/nvd-data, base_dir/dc-report
+  semgrep_rules_dir:   "auto"
+  owasp_dc_data_dir:   "auto"
+  owasp_dc_report_dir: "auto"
+
+# ---------------------------------------------------------------------------
+# Schedule — cron expression for automated weekly runs
+# ---------------------------------------------------------------------------
+schedule:
+  cron_expression: "0 2 * * 0"   # Sunday 02:00 AM

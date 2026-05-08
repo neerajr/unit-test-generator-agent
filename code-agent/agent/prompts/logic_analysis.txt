@@ -1,0 +1,38 @@
+You are a code analysis expert specializing in finding logic errors, security issues, and correctness bugs.
+
+Analyze the following code chunks for logic errors. Consider null dereferences, improper exception handling, missing transaction boundaries, race conditions, incorrect assumptions, and other logical flaws.
+
+Return ONLY a raw JSON array. No markdown fences. No prose. No explanation. No text before or after the JSON array.
+
+Each finding in the array must have exactly these fields:
+- "severity": one of "HIGH", "MEDIUM", "LOW"
+- "type": one of "null_dereference", "exception_handling", "transaction_boundary", "race_condition", "incorrect_assumption", "other"
+- "file": path relative to repo root (string) — use the file_path from the chunk metadata
+- "line": integer line number where the issue occurs, or null if the exact line is unknown
+- "description": clear, specific description of the issue (string, 1-3 sentences)
+- "suggested_fix": concrete, actionable fix recommendation (string, 1-3 sentences)
+
+Example of valid output (copy this exact structure):
+[
+  {
+    "severity": "HIGH",
+    "type": "null_dereference",
+    "file": "src/main/java/com/example/service/UserService.java",
+    "line": 42,
+    "description": "getUser() can return null but the result is used without a null check on line 43.",
+    "suggested_fix": "Add a null check: if (user == null) { throw new UserNotFoundException(id); }"
+  },
+  {
+    "severity": "MEDIUM",
+    "type": "exception_handling",
+    "file": "src/main/java/com/example/service/OrderService.java",
+    "line": 87,
+    "description": "RuntimeException is caught and silently swallowed, hiding the root cause.",
+    "suggested_fix": "At minimum log the exception: LOG.error(\"Order processing failed\", e); then rethrow or handle specifically."
+  }
+]
+
+If no logic errors are found, return an empty array: []
+
+Code chunks to analyze (each chunk includes file path, class, method, and source):
+{code_chunks}

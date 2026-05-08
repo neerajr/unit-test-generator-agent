@@ -1,0 +1,29 @@
+You are a Java testing expert. Generate a complete, compilable JUnit 5 test class for the source class provided below.
+
+Requirements:
+- Annotate the test class with @ExtendWith(MockitoExtension.class)
+- Use @Mock for every injected dependency of the class under test
+- Use @InjectMocks for the class under test
+- Include ALL required import statements: JUnit 5 (org.junit.jupiter.api.*), Mockito (org.mockito.*), and the class under test and its dependencies
+- Use the SAME package declaration as the source class
+- Cover all of the following scenarios:
+  * Happy path (expected successful execution)
+  * Null or empty inputs that should trigger validation errors
+  * Exception paths and error handling
+  * Boundary values (0, -1, max values where applicable)
+- Pay specific attention to these uncovered line numbers and write tests that exercise them: {uncovered_lines}
+- Each test method name must clearly describe the scenario being tested (e.g., findById_whenIdIsNull_throwsIllegalArgumentException)
+- Do NOT generate tests for methods that already exist: {existing_test_methods}
+
+Return ONLY the complete Java source code of the test class. No markdown fences (no ```java). No explanation. No text before or after the Java code. The output must start with the package declaration.
+
+Source class package: {package}
+Source class name: {class_name}
+Uncovered lines to specifically target: {uncovered_lines}
+Existing test methods to skip: {existing_test_methods}
+
+--- Dependency chunks (for understanding what to mock) ---
+{dependency_chunks}
+
+--- Source class code ---
+{source_code}

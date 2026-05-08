@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Code Analysis Report — {{ week_label }}</title>
+  <style>
+    :root {
+      --high: #dc3545; --medium: #fd7e14; --low: #198754; --info: #6c757d;
+      --bg: #f8f9fa; --card: #fff; --border: #dee2e6; --text: #212529;
+      --primary: #0d6efd; --success: #198754; --warning: #ffc107;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    h2 { font-size: 1.1rem; margin: 24px 0 10px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+    .summary-bar { display: flex; gap: 16px; flex-wrap: wrap; background: var(--card);
+      border: 1px solid var(--border); border-radius: 6px; padding: 14px 18px; margin-bottom: 20px; }
+    .stat { display: flex; flex-direction: column; }
+    .stat-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .05em; }
+    .stat-value { font-size: 1.3rem; font-weight: 600; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .badge-pass { background: #d1e7dd; color: #0a3622; }
+    .badge-warn { background: #fff3cd; color: #664d03; }
+    .badge-fail { background: #f8d7da; color: #58151c; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+      padding: 16px; margin-bottom: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { background: var(--bg); text-align: left; padding: 7px 10px; border-bottom: 2px solid var(--border);
+      font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #555; }
+    td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f5f8ff; }
+    .sev-HIGH  { color: var(--high);   font-weight: 700; }
+    .sev-MEDIUM{ color: var(--medium); font-weight: 700; }
+    .sev-LOW   { color: var(--low);    font-weight: 600; }
+    .sev-INFO  { color: var(--info);   }
+    .delta-pos { color: var(--success); }
+    .delta-neg { color: var(--high); }
+    .delta-zero{ color: #888; }
+    .met-yes   { color: var(--success); font-weight: 700; }
+    .met-no    { color: var(--high);    font-weight: 700; }
+    .trend-section { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+    .trend-chart   { flex: 0 0 420px; }
+    .issues-list { list-style: none; padding: 0; }
+    .issues-list li { padding: 4px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; color: #555; }
+    .issues-list li::before { content: "⚠ "; }
+    .code { font-family: 'Courier New', monospace; font-size: 11px; background: #f5f5f5;
+      padding: 1px 4px; border-radius: 3px; }
+    .section-empty { color: #888; font-style: italic; padding: 10px 0; }
+    @media print {
+      body { font-size: 11px; }
+      .container { max-width: 100%; padding: 10px; }
+      h2 { page-break-after: avoid; }
+      tr { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Code Analysis Report</h1>
+  <p style="color:#666; margin-bottom:16px;">{{ report_date }} &nbsp;|&nbsp; Week {{ week_label }}</p>
+
+  <!-- 1. Run Summary Bar -->
+  <div class="summary-bar">
+    <div class="stat">
+      <span class="stat-label">Status</span>
+      {% if data.status.issues | length == 0 %}
+        <span class="badge badge-pass">PASS</span>
+      {% elif data.status.issues | length <= 3 %}
+        <span class="badge badge-warn">WARN</span>
+      {% else %}
+        <span class="badge badge-fail">ISSUES</span>
+      {% endif %}
+    </div>
+    <div class="stat">
+      <span class="stat-label">Model</span>
+      <span class="stat-value" style="font-size:1rem;">{{ data.status.model }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Files Scanned</span>
+      <span class="stat-value">{{ data.status.files_scanned }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Duration</span>
+      <span class="stat-value" style="font-size:1rem;">{{ "%.0f"|format(data.status.duration_seconds) }}s</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Java Coverage</span>
+      <span class="stat-value">{{ "%.1f"|format(data.avg_java_coverage()) }}%</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Python Coverage</span>
+      <span class="stat-value">{{ "%.1f"|format(data.avg_python_coverage()) }}%</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">HIGH Vulns</span>
+      <span class="stat-value" style="color:var(--high)">{{ data.vuln_findings | selectattr('severity','eq','HIGH') | list | length }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Logic Errors</span>
+      <span class="stat-value">{{ data.logic_findings | length }}</span>
+    </div>
+  </div>
+
+  <!-- 2. Coverage Overview -->
+  <h2>Coverage Overview</h2>
+  <p style="font-size:11px; color:#666; margin-bottom:8px;">Target: {{ target_pct }}% line coverage. Sorted by worst delta first.</p>
+
+  {% if data.java_coverage %}
+  <h3 style="font-size:0.95rem; margin:12px 0 6px;">Java</h3>
+  <div class="card" style="padding:0; overflow:hidden;">
+    <table>
+      <thead><tr>
+        <th>Class</th><th>Previous %</th><th>Current %</th><th>Delta</th><th>Status</th>
+      </tr></thead>
+      <tbody>
+      {% for row in data.java_coverage %}
+        <tr>
+          <td class="code">{{ row.name }}</td>
+          <td>{{ "%.1f"|format(row.prev_pct) }}%</td>
+          <td>{{ "%.1f"|format(row.curr_pct) }}%</td>
+          <td class="{% if row.delta > 0 %}delta-pos{% elif row.delta < 0 %}delta-neg{% else %}delta-zero{% endif %}">
+            {% if row.delta > 0 %}+{% endif %}{{ "%.1f"|format(row.delta) }}%
+          </td>
+          <td class="{% if row.met %}met-yes{% else %}met-no{% endif %}">
+            {% if row.met %}✓ Met{% else %}⚠ Below{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if data.python_coverage %}
+  <h3 style="font-size:0.95rem; margin:12px 0 6px;">Python</h3>
+  <div class="card" style="padding:0; overflow:hidden;">
+    <table>
+      <thead><tr>
+        <th>File</th><th>Previous %</th><th>Current %</th><th>Delta</th><th>Status</th>
+      </tr></thead>
+      <tbody>
+      {% for row in data.python_coverage %}
+        <tr>
+          <td class="code">{{ row.name }}</td>
+          <td>{{ "%.1f"|format(row.prev_pct) }}%</td>
+          <td>{{ "%.1f"|format(row.curr_pct) }}%</td>
+          <td class="{% if row.delta > 0 %}delta-pos{% elif row.delta < 0 %}delta-neg{% else %}delta-zero{% endif %}">
+            {% if row.delta > 0 %}+{% endif %}{{ "%.1f"|format(row.delta) }}%
+          </td>
+          <td class="{% if row.met %}met-yes{% else %}met-no{% endif %}">
+            {% if row.met %}✓ Met{% else %}⚠ Below{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if not data.java_coverage and not data.python_coverage %}
+  <p class="section-empty">No coverage data available for this run.</p>
+  {% endif %}
+
+  <!-- 3. 4-Week Trend -->
+  <h2>4-Week Coverage Trend</h2>
+  <div class="card trend-section">
+    <div class="trend-chart">
+      {{ trend_svg | safe }}
+    </div>
+    {% if data.trend_data %}
+    <div>
+      <table style="width:auto; min-width:280px;">
+        <thead><tr><th>Week</th><th>Java %</th><th>Python %</th><th>HIGH</th></tr></thead>
+        <tbody>
+        {% for entry in data.trend_data[-4:] %}
+          <tr>
+            <td>{{ entry.week }}</td>
+            <td>{{ "%.1f"|format(entry.java_coverage_pct) }}%</td>
+            <td>{{ "%.1f"|format(entry.python_coverage_pct) }}%</td>
+            <td class="sev-HIGH">{{ entry.high_vulns }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- 4. Vulnerability Findings -->
+  <h2>Vulnerability Findings</h2>
+  {% if data.vuln_findings %}
+  <div class="card" style="padding:0; overflow:hidden;">
+    <table>
+      <thead><tr>
+        <th>Severity</th><th>Tool</th><th>File</th><th>Line</th><th>CVE</th><th>Description</th>
+      </tr></thead>
+      <tbody>
+      {% for f in data.vuln_findings %}
+        <tr>
+          <td class="sev-{{ f.severity }}">{{ f.severity }}</td>
+          <td>{{ f.tool }}</td>
+          <td class="code">{{ f.file | truncate(50) }}</td>
+          <td>{{ f.line if f.line else '—' }}</td>
+          <td class="code">{{ f.cve if f.cve else '—' }}</td>
+          <td>{{ f.description | truncate(120) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="section-empty">No vulnerability findings this run.</p>
+  {% endif %}
+
+  <!-- 5. Logic Error Findings -->
+  <h2>Logic Error Findings</h2>
+  {% if data.logic_findings %}
+  <div class="card" style="padding:0; overflow:hidden;">
+    <table>
+      <thead><tr>
+        <th>Severity</th><th>Type</th><th>File</th><th>Line</th><th>Description</th><th>Suggested Fix</th>
+      </tr></thead>
+      <tbody>
+      {% for f in data.logic_findings %}
+        <tr>
+          <td class="sev-{{ f.severity }}">{{ f.severity }}</td>
+          <td class="code">{{ f.type }}</td>
+          <td class="code">{{ f.file | truncate(45) }}</td>
+          <td>{{ f.line if f.line else '—' }}</td>
+          <td>{{ f.description | truncate(120) }}</td>
+          <td>{{ f.suggested_fix | truncate(120) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="section-empty">No logic error findings this run.</p>
+  {% endif %}
+
+  <!-- 6. Generated Test Files -->
+  <h2>Generated Test Files</h2>
+  {% if data.generated_tests %}
+  <div class="card" style="padding:0; overflow:hidden;">
+    <table>
+      <thead><tr>
+        <th>Output Path</th><th>Source Class / File</th><th>Methods Added</th>
+        <th>Coverage Before</th><th>Coverage After</th>
+      </tr></thead>
+      <tbody>
+      {% for t in data.generated_tests %}
+        <tr>
+          <td class="code">{{ t.output_path | truncate(55) }}</td>
+          <td class="code">{{ t.source_file | truncate(40) }}</td>
+          <td style="text-align:center;">{{ t.methods_added }}</td>
+          <td>{{ "%.1f"|format(t.coverage_before) }}%</td>
+          <td class="{% if t.coverage_after >= target_pct %}met-yes{% else %}delta-pos{% endif %}">
+            {{ "%.1f"|format(t.coverage_after) }}%
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="section-empty">No test files generated this run.</p>
+  {% endif %}
+
+  <!-- 7. Run Issues -->
+  <h2>Run Issues</h2>
+  {% if data.status.issues %}
+  <div class="card">
+    <ul class="issues-list">
+    {% for issue in data.status.issues %}
+      <li>{{ issue }}</li>
+    {% endfor %}
+    </ul>
+  </div>
+  {% else %}
+  <p class="section-empty">No issues — clean run.</p>
+  {% endif %}
+
+  <p style="margin-top:24px; font-size:11px; color:#aaa; text-align:right;">
+    Generated by code-agent &nbsp;|&nbsp; {{ report_date }}
+  </p>
+
+</div>
+</body>
+</html>
