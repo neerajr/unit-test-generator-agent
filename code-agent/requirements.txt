@@ -41,6 +41,7 @@ pytest-mock==3.14.0
 
 # Static analysis (installed here so setup.sh can use them from venv)
 bandit==1.8.3
+semgrep==1.82.0
 
 # Utilities
 typing-extensions==4.12.2

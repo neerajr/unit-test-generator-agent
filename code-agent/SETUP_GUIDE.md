@@ -7,29 +7,31 @@
 
 ---
 
+
 ## Table of Contents
 
 1. [What Does This Software Do?](#1-what-does-this-software-do)
 2. [What Does Your Computer Need?](#2-what-does-your-computer-need)
-3. [Choose Your Platform](#3-choose-your-platform)
-4. [Install Java (JDK 17)](#4-install-java-jdk-17)
-5. [Install Maven](#5-install-maven)
-6. [Install Python 3.11](#6-install-python-311)
-7. [Install Git](#7-install-git)
-8. [Install Ollama (The AI Brain)](#8-install-ollama-the-ai-brain)
-9. [Install dependency-check (Security Scanner)](#9-install-dependency-check-security-scanner)
-10. [Install Semgrep (Code Pattern Scanner)](#10-install-semgrep-code-pattern-scanner)
-11. [Download This Project](#11-download-this-project)
-12. [Run the Setup Script](#12-run-the-setup-script)
-13. [Tell the Agent Where Your Code Is](#13-tell-the-agent-where-your-code-is)
-14. [Prepare Your Java Project (pom.xml Changes)](#14-prepare-your-java-project-pomxml-changes)
-15. [Build the RAG Knowledge Base (ChromaDB)](#15-build-the-rag-knowledge-base-chromadb)
-16. [Run Your First Dry-Run](#16-run-your-first-dry-run)
-17. [Run the Full Pipeline](#17-run-the-full-pipeline)
-18. [Understanding the Output and Reports](#18-understanding-the-output-and-reports)
-19. [Schedule Automatic Weekly Runs](#19-schedule-automatic-weekly-runs)
-20. [Troubleshooting Common Problems](#20-troubleshooting-common-problems)
-21. [Quick Reference Card](#21-quick-reference-card)
+3. [Choose Your Setup Method](#3-choose-your-setup-method)
+4. [Docker Setup (Recommended for Linux)](#4-docker-setup-recommended-for-linux)
+5. [Manual Setup — Install Java (JDK 17)](#5-manual-setup--install-java-jdk-17)
+6. [Manual Setup — Install Maven](#6-manual-setup--install-maven)
+7. [Manual Setup — Install Python 3.11](#7-manual-setup--install-python-311)
+8. [Manual Setup — Install Git](#8-manual-setup--install-git)
+9. [Manual Setup — Install Ollama (The AI Brain)](#9-manual-setup--install-ollama-the-ai-brain)
+10. [Manual Setup — Install dependency-check (Security Scanner)](#10-manual-setup--install-dependency-check-security-scanner)
+11. [Manual Setup — Install Semgrep (Code Pattern Scanner)](#11-manual-setup--install-semgrep-code-pattern-scanner)
+12. [Download This Project](#12-download-this-project)
+13. [Run the Setup Script (Manual only)](#13-run-the-setup-script-manual-only)
+14. [Tell the Agent Where Your Code Is](#14-tell-the-agent-where-your-code-is)
+15. [Prepare Your Java Project (pom.xml Changes)](#15-prepare-your-java-project-pomxml-changes)
+16. [Build the RAG Knowledge Base (ChromaDB)](#16-build-the-rag-knowledge-base-chromadb)
+17. [Run Your First Dry-Run](#17-run-your-first-dry-run)
+18. [Run the Full Pipeline](#18-run-the-full-pipeline)
+19. [Understanding the Output and Reports](#19-understanding-the-output-and-reports)
+20. [Schedule Automatic Weekly Runs](#20-schedule-automatic-weekly-runs)
+21. [Troubleshooting Common Problems](#21-troubleshooting-common-problems)
+22. [Quick Reference Card](#22-quick-reference-card)
 
 ---
 
@@ -68,45 +70,239 @@ locally using a free tool called Ollama.
 
 ### Operating System
 
-The agent works on all of these — pick your platform:
-
-- **Linux** (Ubuntu 20.04+ or similar) — recommended
-- **macOS** (12 Monterey or later)
-- **Windows with WSL2** — run Linux inside Windows (recommended for Windows users)
-- **Windows Native** — run directly without WSL2
+- **Linux** (Ubuntu 20.04+ or similar) — recommended, works with Docker or manual install
+- **macOS** (12 Monterey or later) — manual install only
+- **Windows with WSL2** — manual install inside WSL2 (recommended for Windows users)
+- **Windows Native** — manual install only
 
 ---
 
-## 3. Choose Your Platform
+## 3. Choose Your Setup Method
 
-### Windows Users — Which Should You Pick?
+There are two ways to get the agent running. Choose one:
 
-**Option A: WSL2 (Recommended for Windows)**
-WSL2 gives you a full Linux environment inside Windows. Most things work better this way.
-Use this if you have Windows 10 (version 2004+) or Windows 11.
+### Option A: Docker (Recommended for Linux users)
 
-**Option B: Windows Native**
-Run everything directly in PowerShell. Simpler setup but some tools have less support.
+Docker packages everything the agent needs — Java, Maven, Python, OWASP Dependency-Check,
+Semgrep, WeasyPrint — into a single container image. You only need to install Docker.
 
-To check your Windows version: press `Win + R`, type `winver`, press Enter.
+**Choose Docker if:**
+- You are on Linux
+- You want the simplest setup with the fewest steps
+- You do not want to install Java, Maven, or Python on your host machine
 
-### How to Install WSL2 (Windows users, Option A only)
-
-1. Open **PowerShell as Administrator** (right-click PowerShell → "Run as administrator")
-2. Type this command and press Enter:
-   ```powershell
-   wsl --install
-   ```
-3. Restart your computer when prompted
-4. After restart, Ubuntu will open automatically — set a username and password
-5. You now have a Linux terminal inside Windows
-
-> From this point, **WSL2 users follow the Linux instructions** in each section below.
-> Open Ubuntu from the Start menu whenever you need a terminal.
+**Skip to:** [Section 4 — Docker Setup](#4-docker-setup-recommended-for-linux)
 
 ---
 
-## 4. Install Java (JDK 17)
+### Option B: Manual Install
+
+Install each tool individually. Works on Linux, macOS, WSL2 (Windows), and Windows native.
+
+**Choose manual install if:**
+- You are on macOS or Windows
+- You already have Java, Maven, and Python installed
+- You prefer not to use Docker
+
+**Continue to:** [Section 5 — Manual Setup](#5-manual-setup--install-java-jdk-17)
+
+---
+
+## 4. Docker Setup (Recommended for Linux)
+
+This section replaces Sections 5–13 for Docker users. If you are doing a manual install,
+skip to [Section 5](#5-manual-setup--install-java-jdk-17).
+
+### Step 4.1 — Install Docker Engine
+
+```bash
+# Ubuntu / Debian:
+sudo apt update
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+    -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) \
+    signed-by=/etc/apt/keyrings/docker.asc] \
+    https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io \
+    docker-buildx-plugin docker-compose-plugin -y
+```
+
+Allow your user to run Docker without `sudo` (log out and back in after this):
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+Verify Docker is working:
+
+```bash
+docker --version        # should print Docker version 24+
+docker compose version  # should print Docker Compose version 2+
+```
+
+### Step 4.2 — Download This Project
+
+```bash
+git clone https://github.com/neerajr/unit-test-generator-agent.git unit-test-generator-agent
+cd unit-test-generator-agent
+```
+
+
+### Step 4.3 — Edit docker-compose.yml
+
+Open `docker-compose.yml` (in the root of the project) with any text editor:
+
+```bash
+nano docker-compose.yml    # or use VS Code, gedit, etc.
+```
+
+Find the two lines that say `/path/to/your/...` and change them to the actual paths
+on your computer where your Java and Python projects live:
+
+```yaml
+volumes:
+  - /home/yourname/projects/springboot-app:/repos/java:ro    # <- edit this
+  - /home/yourname/projects/fastapi-app:/repos/python:ro     # <- edit this
+```
+
+> The `:ro` at the end means "read-only" — the agent will never modify your source code.
+
+Also choose the right AI model based on your hardware (uncomment one line):
+
+```yaml
+environment:
+  - AGENT_LLM_MODEL=codellama:7b-q4          # CPU or < 8 GB GPU VRAM (default)
+  # - AGENT_LLM_MODEL=codellama:13b-q4        # 8–23 GB GPU VRAM
+  # - AGENT_LLM_MODEL=qwen2.5-coder:32b       # 24+ GB GPU VRAM
+```
+
+**If you have an NVIDIA GPU**, also uncomment the `deploy.resources` block under the
+`ollama` service to enable GPU acceleration:
+
+```yaml
+ollama:
+  ...
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
+```
+
+### Step 4.4 — Build the Docker Image
+
+From the project root (where `docker-compose.yml` is located):
+
+```bash
+docker compose build
+```
+
+This downloads the base image and installs all dependencies inside the container.
+It takes 5–15 minutes and only needs to be done once (or when you update the project).
+
+**What gets installed automatically inside the image:**
+- Python 3.11 + all Python libraries
+- OpenJDK 17 + Maven
+- OWASP Dependency-Check CLI
+- Semgrep, Bandit (static analysis tools)
+- WeasyPrint (HTML to PDF renderer with all its fonts and graphics libraries)
+
+### Step 4.5 — First Run (Dry-Run)
+
+Start everything with a dry-run first. This confirms the containers can talk to each other
+and the agent can find your code — without writing any test files yet.
+
+```bash
+docker compose run --rm agent python3 agent/main.py --dry-run
+```
+
+The first time you run this:
+1. Docker starts the Ollama container
+2. The entrypoint script waits for Ollama to be ready (may take 30–60 seconds)
+3. It automatically downloads the LLM model (~4 GB) and embedding model (~270 MB)
+4. The agent runs in dry-run mode
+
+**This step requires a good internet connection and may take 20–60 minutes** because of
+the model download. After the first run the models are cached in the `ollama-models` volume
+and subsequent starts are instant.
+
+You should see output like:
+
+```
+[entrypoint] Waiting for Ollama at http://ollama:11434...
+[entrypoint] Ollama is ready.
+[entrypoint] Pulling codellama:7b-q4 — this may take a while...
+[entrypoint] Pull complete: codellama:7b-q4
+[entrypoint] Pulling nomic-embed-text...
+[entrypoint] Pull complete: nomic-embed-text
+[entrypoint] Starting: python3 agent/main.py --dry-run
+...
+[INFO]  Platform: linux
+[INFO]  Ollama reachable at http://ollama:11434
+[INFO]  Java repo: /repos/java  ✓ exists
+[INFO]  Dry-run complete. No files written.
+```
+
+**If you see "Repo path does not exist"**, check that the host paths in your volume
+bind-mounts exist and are correct. Test with:
+
+```bash
+docker compose run --rm agent ls /repos/java
+```
+
+### Step 4.6 — Full Run
+
+Once the dry-run succeeds, run the full pipeline:
+
+```bash
+docker compose up
+```
+
+Or in the background:
+
+```bash
+docker compose up -d
+docker compose logs -f agent    # follow the logs
+```
+
+### Step 4.7 — Access Your Reports
+
+Reports are saved in the `agent-output` Docker named volume. The easiest way to access
+them is to switch to a bind mount — edit the agent's volume in `docker-compose.yml`:
+
+```yaml
+# Replace this line:
+- agent-output:/agent-output
+
+# With a local folder path:
+- ./agent-output:/agent-output
+```
+
+After making this change and running again, reports will appear in a new `agent-output/`
+folder right next to your `docker-compose.yml` file.
+
+Open the report in your browser:
+
+```bash
+xdg-open ./agent-output/reports/*.html
+```
+
+**Docker users continue to Section 14** to configure your Java project's pom.xml.
+
+> Sections 5–13 (manual tool installation and the setup script) are **not needed** when
+> using Docker. Skip directly to [Section 14](#14-tell-the-agent-where-your-code-is).
+
+---
+
+## 5. Manual Setup — Install Java (JDK 17)
 
 Java is needed to analyze and test your Spring Boot project.
 
@@ -146,7 +342,7 @@ sudo ln -sfn /opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk /Library/Java/Java
 
 ---
 
-## 5. Install Maven
+## 6. Manual Setup — Install Maven
 
 Maven is a build tool for Java projects. The agent uses it to compile and run your tests.
 
@@ -185,7 +381,7 @@ brew install maven
 
 ---
 
-## 6. Install Python 3.11
+## 7. Manual Setup — Install Python 3.11
 
 Python runs the agent itself.
 
@@ -220,7 +416,7 @@ brew install python@3.11
 
 ---
 
-## 7. Install Git
+## 8. Manual Setup — Install Git
 
 Git is used to read file history and detect which files changed since last run.
 
@@ -245,7 +441,7 @@ brew install git
 
 ---
 
-## 8. Install Ollama (The AI Brain)
+## 9. Manual Setup — Install Ollama (The AI Brain)
 
 Ollama is the software that runs the AI language model on your computer. This is what
 generates the test cases.
@@ -306,9 +502,11 @@ If you see a JSON response, Ollama is working.
 
 ---
 
-## 9. Install dependency-check (Security Scanner)
+## 10. Manual Setup — Install dependency-check (Security Scanner)
 
 This tool scans your Java project for known security vulnerabilities in libraries.
+
+> **Docker users:** dependency-check v9.2.0 is pre-installed in the Docker image. Skip this section.
 
 ### All platforms
 
@@ -349,9 +547,11 @@ dependency-check --updateonly --data ~/agent-output/nvd-data
 
 ---
 
-## 10. Install Semgrep (Code Pattern Scanner)
+## 11. Manual Setup — Install Semgrep (Code Pattern Scanner)
 
 Semgrep scans your code for security patterns.
+
+> **Docker users:** Semgrep is pre-installed in the Docker image. Skip this section.
 
 ### Linux / WSL2 / macOS
 
@@ -373,13 +573,13 @@ semgrep --version
 
 ---
 
-## 11. Download This Project
+## 12. Download This Project
 
 ### Option A: Using Git (recommended)
 
 ```bash
-git clone <repository-url> code-agent
-cd code-agent
+git clone <repository-url> unit-test-generator-agent
+cd unit-test-generator-agent/code-agent
 ```
 
 > Replace `<repository-url>` with the actual URL of this repository.
@@ -387,16 +587,18 @@ cd code-agent
 ### Option B: Download as ZIP
 
 1. Download the ZIP file from the repository
-2. Extract it to a folder, e.g., `~/code-agent` (Linux/Mac) or `C:\code-agent` (Windows)
-3. Open a terminal and navigate to that folder:
+2. Extract it to a folder, e.g., `~/unit-test-generator-agent` (Linux/Mac) or `C:\unit-test-generator-agent` (Windows)
+3. Open a terminal and navigate to the `code-agent` sub-folder:
    ```bash
-   cd ~/code-agent        # Linux/macOS
-   cd C:\code-agent       # Windows PowerShell
+   cd ~/unit-test-generator-agent/code-agent        # Linux/macOS
+   cd C:\unit-test-generator-agent\code-agent        # Windows PowerShell
    ```
 
 ---
 
-## 12. Run the Setup Script
+## 13. Run the Setup Script (Manual only)
+
+> **Docker users:** skip this section. Your setup is complete after Section 4.
 
 The setup script does all the heavy lifting automatically: it detects your GPU,
 downloads the right AI model, creates a Python environment, and prepares the output folders.
@@ -439,12 +641,33 @@ pwsh -ExecutionPolicy Bypass -File scripts\setup.ps1
 
 ---
 
-## 13. Tell the Agent Where Your Code Is
+## 14. Tell the Agent Where Your Code Is
 
-This is the most important configuration step. Open the file `config/config.yaml`
-in any text editor (Notepad, VS Code, nano, etc.).
+### Docker users
 
-Find the `repos` section near the top of the file:
+Edit the volume bind-mounts in `docker-compose.yml`:
+
+```yaml
+volumes:
+  - /home/yourname/projects/springboot-app:/repos/java:ro    # <- change the left side
+  - /home/yourname/projects/fastapi-app:/repos/python:ro     # <- change the left side
+```
+
+The right-hand side (`/repos/java` and `/repos/python`) is fixed — the agent always
+looks at those paths inside the container. Only change the left side (your host paths).
+
+Verify the agent can see your repos:
+
+```bash
+docker compose run --rm agent ls /repos/java
+docker compose run --rm agent ls /repos/python
+```
+
+### Manual install users
+
+Open `config/config.yaml` in any text editor (Notepad, VS Code, nano, etc.).
+
+Find the `repos` section near the top:
 
 ```yaml
 repos:
@@ -475,37 +698,12 @@ repos:
 
 ### What if you only have a Java project?
 
-You can run the agent for Java only. Just set a dummy path for Python that does not exist:
-
-```yaml
-repos:
-  java_repo_path:   "~/my-company/inventory-service"
-  python_repo_path: "~/does-not-exist"
-```
-
-Then run the agent with `--repo java` (explained in Step 17).
-
-### Other settings you may want to change
-
-You usually do **not** need to change anything else, but here are the key settings if needed:
-
-```yaml
-output:
-  base_dir: "~/agent-output"        # Where reports and tests are saved
-                                    # Change this if you want a different location
-
-llm:
-  base_url: "auto"                  # Leave as "auto" — the agent detects Ollama automatically
-  model: "codellama:7b-q4"         # Set by setup script — don't change manually
-
-coverage:
-  target_pct: 90                    # Stop generating tests when 90% of code is covered
-  max_iterations: 3                 # Try up to 3 rounds of test generation per run
-```
+Run the agent with `--repo java` (explained in Section 18). Set any path for the
+unused language — the agent skips repos it cannot find when a `--repo` flag is used.
 
 ---
 
-## 14. Prepare Your Java Project (pom.xml Changes)
+## 15. Prepare Your Java Project (pom.xml Changes)
 
 Your Spring Boot project needs three Maven plugins so the agent can:
 - Measure how much of your code is covered by tests (JaCoCo)
@@ -583,44 +781,6 @@ This plugin allows the agent's generated test files to be compiled and run by Ma
 </plugin>
 ```
 
-### Where to put these plugins in pom.xml
-
-Your `pom.xml` should look like this (simplified):
-
-```xml
-<project>
-  ...
-  <build>
-    <plugins>
-
-      <!-- your existing plugins here -->
-
-      <!-- ADD THESE THREE BLOCKS: -->
-
-      <!-- JaCoCo -->
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        ...
-      </plugin>
-
-      <!-- SpotBugs -->
-      <plugin>
-        <groupId>com.github.spotbugs</groupId>
-        ...
-      </plugin>
-
-      <!-- build-helper -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        ...
-      </plugin>
-
-    </plugins>
-  </build>
-  ...
-</project>
-```
-
 ### Verify the pom.xml Changes Work
 
 Run this command inside your Java project folder:
@@ -639,13 +799,14 @@ If the file exists, JaCoCo is working correctly.
 
 ---
 
-## 15. Build the RAG Knowledge Base (ChromaDB)
+## 16. Build the RAG Knowledge Base (ChromaDB)
 
 RAG stands for **Retrieval-Augmented Generation**. Think of it as giving the AI a
 "library card" — before generating tests, the AI searches a local database of your code
 to understand context (what classes exist, how methods call each other, etc.).
 
-This database is called **ChromaDB** and it lives on your computer in `~/agent-output/chromadb/`.
+This database is called **ChromaDB** and it lives in the agent's output directory
+(`~/agent-output/chromadb/` for manual install, or the `agent-output` volume for Docker).
 
 ### How the RAG system works
 
@@ -666,108 +827,98 @@ Your Code Files
 ### First-time indexing
 
 The indexing happens **automatically** the first time you run the agent. There is nothing
-extra to do — just run the agent (Step 17) and the database will be built.
+extra to do.
 
-However, if you want to build *only* the database without running the full pipeline
-(e.g., to verify it works), you can do so:
+To build only the database without running the full pipeline:
 
 ```bash
-source venv/bin/activate          # Linux/macOS
-# OR
-venv\Scripts\activate.ps1         # Windows PowerShell
+# Docker:
+docker compose run --rm agent python3 agent/main.py --dry-run --skip-analysis
 
+# Manual install:
+source venv/bin/activate
 python3 agent/main.py --dry-run --skip-analysis
 ```
-
-This will:
-- Build the ChromaDB database from your code
-- Show you statistics (how many chunks were indexed)
-- Not generate any tests or reports
-
-### What gets indexed
-
-| Language | What is indexed |
-| --- | --- |
-| Java | All `.java` files (except files in `test/` folders) |
-| Python | All `.py` files (except files in `tests/` folders) |
-
-The indexer automatically skips your existing test files so it only learns from your
-production code.
 
 ### How the database stays up-to-date
 
 On every subsequent run, the agent only re-indexes files that **changed since the last run**
-(detected via `git diff`). This makes it fast on subsequent runs.
-
-### Checking the database was built
-
-After the first run, you should see:
-
-```
-~/agent-output/chromadb/
-├── chroma.sqlite3          ← Main database file
-└── ... (other ChromaDB files)
-```
+(detected via `git diff`). This makes subsequent runs much faster.
 
 ---
 
-## 16. Run Your First Dry-Run
+## 17. Run Your First Dry-Run
 
 A **dry-run** does everything except actually write test files or reports. Use it to
 verify that the agent can connect to all the tools and read your code.
 
+### Docker
+
+```bash
+docker compose run --rm agent python3 agent/main.py --dry-run
+```
+
+### Manual install
+
 ```bash
 # Linux / macOS / WSL2:
-cd ~/code-agent                     # Navigate to the project folder
-source venv/bin/activate            # Activate the Python environment
+cd ~/unit-test-generator-agent/code-agent
+source venv/bin/activate
 python3 agent/main.py --dry-run
 
 # Windows Native (PowerShell):
-cd C:\code-agent
+cd C:\unit-test-generator-agent\code-agent
 venv\Scripts\activate.ps1
 python agent\main.py --dry-run
 ```
 
 ### What a successful dry-run looks like
 
-You will see output like this (simplified):
-
 ```
 [INFO]  Loading configuration...
-[INFO]  Platform: linux (or macos / windows_wsl2)
-[INFO]  Ollama reachable at http://localhost:11434
+[INFO]  Platform: linux
+[INFO]  Ollama reachable at http://ollama:11434   (Docker) or http://localhost:11434 (manual)
 [INFO]  Model: codellama:7b-q4
-[INFO]  Java repo: /home/yourname/my-company/inventory-service  ✓ exists
+[INFO]  Java repo: /repos/java  ✓ exists           (Docker) or ~/your/path ✓ exists (manual)
 [INFO]  Step 1/9 — Indexing Java repo...
 [INFO]    Chunked 127 methods from 34 Java files
-[INFO]    Embedded 127 chunks
 [INFO]    [dry-run] Would upsert 127 chunks to ChromaDB
-[INFO]  Step 2/9 — Running vulnerability analysis...
-[INFO]    [dry-run] Would run SpotBugs, OWASP DC, Bandit, Semgrep
 [INFO]  ...
-[INFO]  Step 9/9 — [dry-run] Would render report to ~/agent-output/reports/2025-W22-report.html
 [INFO]  Dry-run complete. No files written.
 ```
 
 ### Common dry-run failures and fixes
 
-**"Repo path does not exist"**
-→ Check `config/config.yaml` — the path you entered does not exist on your system.
-Check for typos. Use `ls ~/path/to/your/repo` to verify the path.
+**"Repo path does not exist" (Docker)**
+→ Your volume bind-mount path is wrong. Check the host path in `docker-compose.yml` exists.
+Test: `docker compose run --rm agent ls /repos/java`
 
-**"Ollama is not reachable"**
-→ Ollama is not running. Start it:
-- Linux/macOS: `ollama serve`
-- Windows: Open the Ollama app from the Start menu or system tray
+**"Repo path does not exist" (manual)**
+→ Check `config/config.yaml` — the path you entered does not exist. Check for typos.
 
-**"java: command not found" or "mvn: command not found"**
-→ Java or Maven is not installed correctly, or not in your PATH. Redo Steps 4 and 5.
+**"Ollama is not reachable" (Docker)**
+→ The `ollama` service may still be starting. Wait 30 seconds and retry.
+Check: `docker compose ps ollama`
+
+**"Ollama is not reachable" (manual)**
+→ Ollama is not running. Start it: `ollama serve` (Linux/macOS) or open the Ollama app (Windows).
+
+**"java: command not found" or "mvn: command not found" (manual only)**
+→ Java or Maven is not installed correctly, or not in your PATH. Redo Sections 5 and 6.
 
 ---
 
-## 17. Run the Full Pipeline
+## 18. Run the Full Pipeline
 
 Once the dry-run succeeds, run the full pipeline:
+
+### Docker
+
+```bash
+docker compose up
+```
+
+### Manual install
 
 ```bash
 # Linux / macOS / WSL2:
@@ -793,37 +944,50 @@ The agent runs 9 steps in sequence:
 | 8 — Python test gen | AI writes pytest tests | 20–60 min |
 | 9 — Report | Creates HTML + PDF report | 1–2 min |
 
-Total time varies greatly depending on your hardware and code size.
-
 ### Running for one language only
 
 ```bash
-# Java only:
-python3 agent/main.py --repo java
+# Docker:
+docker compose run --rm agent python3 agent/main.py --repo java
+docker compose run --rm agent python3 agent/main.py --repo python
 
-# Python only:
+# Manual:
+python3 agent/main.py --repo java
 python3 agent/main.py --repo python
 ```
 
-### Skipping the re-indexing (faster subsequent runs)
-
-If your code has not changed, you can skip re-indexing ChromaDB:
+### Skipping steps (faster subsequent runs)
 
 ```bash
-python3 agent/main.py --skip-ingest
-```
+# Skip re-indexing (if your code has not changed):
+docker compose run --rm agent python3 agent/main.py --skip-ingest    # Docker
+python3 agent/main.py --skip-ingest                                   # Manual
 
-### Skipping security analysis (test generation only)
-
-```bash
-python3 agent/main.py --skip-analysis
+# Skip security analysis (test generation only):
+docker compose run --rm agent python3 agent/main.py --skip-analysis  # Docker
+python3 agent/main.py --skip-analysis                                  # Manual
 ```
 
 ---
 
-## 18. Understanding the Output and Reports
+## 19. Understanding the Output and Reports
 
-After a successful run, everything is saved under `~/agent-output/`:
+### Docker — accessing reports
+
+By default reports live in the `agent-output` Docker named volume. To access them
+easily, switch the volume to a bind mount in `docker-compose.yml`:
+
+```yaml
+# Change this line under the agent service volumes:
+- agent-output:/agent-output
+
+# To a local folder:
+- ./agent-output:/agent-output
+```
+
+After this change, reports appear in `agent-output/reports/` next to your `docker-compose.yml`.
+
+### Manual install — output location
 
 ```
 ~/agent-output/
@@ -834,21 +998,20 @@ After a successful run, everything is saved under `~/agent-output/`:
 │   └── run.log                 ← Log of the last scheduled run
 ├── generated-tests/
 │   ├── java/                   ← Generated JUnit 5 test files
-│   │   └── com/example/service/
-│   │       └── UserServiceTest.java
 │   └── python/                 ← Generated pytest test files
-│       └── test_items.py
 └── chromadb/                   ← The RAG knowledge database (do not delete)
 ```
 
 ### How to view the report
 
-Open the `.html` file in any web browser (Chrome, Firefox, Edge, Safari).
-
-**On Linux / macOS:**
+**On Linux (Docker or manual):**
 ```bash
-xdg-open ~/agent-output/reports/2025-W22-report.html    # Linux
-open ~/agent-output/reports/2025-W22-report.html         # macOS
+xdg-open ~/agent-output/reports/2025-W22-report.html
+```
+
+**On macOS:**
+```bash
+open ~/agent-output/reports/2025-W22-report.html
 ```
 
 **On Windows (File Explorer):**
@@ -883,36 +1046,42 @@ how much each one improved your coverage.
 
 **7. Run Issues** — Any errors or warnings that occurred during the run.
 
-### What to do with the generated test files
-
-The generated test files in `~/agent-output/generated-tests/java/` are **suggestions**.
-They are written by AI and may not compile perfectly every time. You should:
-
-1. Review them for correctness
-2. Fix any compilation errors
-3. Move them into your project's test source folder if you want to keep them permanently
-4. Or run them directly using the Maven property (see below)
-
 ### Running generated tests manually
 
 ```bash
-# Linux / WSL2:
+# Manual install:
 cd ~/my-company/inventory-service
 mvn test jacoco:report -Dagent.tests.dir=$HOME/agent-output/generated-tests/java
 
-# Windows:
-cd C:\Users\YourName\my-company\inventory-service
-mvn test jacoco:report "-Dagent.tests.dir=C:\Users\YourName\agent-output\generated-tests\java"
+# Docker (if using bind mount ./agent-output):
+cd ~/my-company/inventory-service
+mvn test jacoco:report -Dagent.tests.dir=$(pwd)/../agent-output/generated-tests/java
 ```
 
 ---
 
-## 19. Schedule Automatic Weekly Runs
+## 20. Schedule Automatic Weekly Runs
 
-The agent is designed to run automatically once a week (Sunday at 2:00 AM by default).
-Here is how to set up the schedule.
+### Docker — host crontab
 
-### Linux / WSL2 — Using cron
+Add this to the host crontab (`crontab -e`):
+
+```
+0 2 * * 0 docker compose -f /absolute/path/to/docker-compose.yml run --rm agent
+```
+
+Change `/absolute/path/to/docker-compose.yml` to the actual path on your system. The
+`ollama` service must already be running (start it once with `docker compose up -d ollama`).
+
+To auto-start Ollama when the machine boots, add the `restart: unless-stopped` line
+(it is already there by default in the provided `docker-compose.yml`) and enable the
+Docker service to start on boot:
+
+```bash
+sudo systemctl enable docker
+```
+
+### Manual install — Linux / WSL2 — Using cron
 
 The setup script already registered the cron job. To verify:
 
@@ -922,7 +1091,7 @@ crontab -l
 
 You should see a line like:
 ```
-0 2 * * 0 /home/yourname/code-agent/scripts/run_agent.sh >> /home/yourname/agent-output/reports/run.log 2>&1
+0 2 * * 0 /home/yourname/unit-test-generator-agent/code-agent/scripts/run_agent.sh >> ...
 ```
 
 To change the schedule, edit `config/config.yaml`:
@@ -938,8 +1107,6 @@ Then re-run `bash scripts/setup.sh` to update the cron job.
 
 **WSL2 only — make cron start automatically on Windows boot:**
 
-WSL2 does not start automatically. Add this to `/etc/wsl.conf` inside WSL2:
-
 ```bash
 sudo nano /etc/wsl.conf
 ```
@@ -953,52 +1120,47 @@ command=service cron start
 
 Save with `Ctrl+O`, exit with `Ctrl+X`. Restart WSL2 for this to take effect.
 
-### macOS — Using cron
+### Manual install — macOS — Using cron
 
 ```bash
 crontab -e
 ```
 
-Add this line (adjust the path to your actual code-agent location):
+Add this line:
 
 ```
-0 2 * * 0 /Users/yourname/code-agent/scripts/run_agent.sh >> /Users/yourname/agent-output/reports/run.log 2>&1
+0 2 * * 0 /Users/yourname/unit-test-generator-agent/code-agent/scripts/run_agent.sh >> /Users/yourname/agent-output/reports/run.log 2>&1
 ```
 
-### Windows Native — Using Task Scheduler
+### Manual install — Windows Native — Using Task Scheduler
 
 Open an elevated PowerShell (right-click → Run as administrator) and run:
 
 ```powershell
-$Action  = New-ScheduledTaskAction -Execute "pwsh" -Argument "-File `"C:\code-agent\scripts\run_agent.ps1`""
+$Action  = New-ScheduledTaskAction -Execute "pwsh" -Argument "-File `"C:\unit-test-generator-agent\code-agent\scripts\run_agent.ps1`""
 $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 2am
 $Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable
 Register-ScheduledTask -TaskName "CodeAgent" -Action $Action -Trigger $Trigger -Settings $Settings -RunLevel Highest
 ```
 
-Adjust `C:\code-agent` to wherever you installed the project.
+---
 
-### Changing when the agent runs
+## 21. Troubleshooting Common Problems
 
-Edit `config/config.yaml` under the `schedule` section:
+### "Ollama is not reachable" (Docker)
 
-```yaml
-schedule:
-  cron_expression: "0 2 * * 0"
-```
+The agent container cannot reach the Ollama sidecar.
 
-Cron format: `minute  hour  day-of-month  month  day-of-week`
-
-Examples:
-- `0 2 * * 0` = Sunday 2:00 AM
-- `0 8 * * 1` = Monday 8:00 AM
-- `0 0 1 * *` = First day of every month at midnight
+**Fix:**
+1. Check that both containers are running: `docker compose ps`
+2. Restart Ollama if it crashed: `docker compose restart ollama`
+3. Check Ollama logs: `docker compose logs ollama`
+4. The agent uses `AGENT_OLLAMA_HOST=ollama` to reach Ollama via Docker's internal DNS.
+   Do not change this value.
 
 ---
 
-## 20. Troubleshooting Common Problems
-
-### "Ollama is not reachable"
+### "Ollama is not reachable" (manual install)
 
 The agent cannot connect to the AI model.
 
@@ -1010,58 +1172,69 @@ The agent cannot connect to the AI model.
    ```bash
    curl http://localhost:11434/api/tags
    ```
-   If this fails, Ollama is not running.
-3. WSL2 users: The Windows host IP is detected automatically. If it seems wrong, override it:
+3. WSL2 users: The Windows host IP is detected automatically. If it seems wrong:
    ```bash
    export AGENT_OLLAMA_HOST=<your-windows-ip>
    python3 agent/main.py --dry-run
    ```
-   Find your Windows IP from WSL2: `ip route show default | awk '{print $3}'`
 
 ---
 
-### "Repo path does not exist"
-
-The path you entered in `config/config.yaml` does not exist on your system.
+### "Repo path does not exist" (Docker)
 
 **Fix:**
-1. Check the path exists:
-   ```bash
-   ls ~/my-company/inventory-service
-   ```
-2. If you see "No such file or directory", the path is wrong
-3. Find the correct path:
-   ```bash
-   find ~ -name "pom.xml" 2>/dev/null    # Find Java projects by pom.xml
-   ```
-4. Update `config/config.yaml` with the correct path
+1. Check the host path in your `docker-compose.yml` volume line actually exists on your machine
+2. Test: `docker compose run --rm agent ls /repos/java`
+3. If empty or missing, correct the host path and rebuild
+
+---
+
+### "Repo path does not exist" (manual install)
+
+**Fix:**
+1. Check the path exists: `ls ~/my-company/inventory-service`
+2. If not found: `find ~ -name "pom.xml" 2>/dev/null` to locate your Java project
+3. Update `config/config.yaml` with the correct path
 
 ---
 
 ### "JaCoCo report not found" or "jacoco.xml is missing"
 
-The agent cannot find the test coverage report for your Java project.
-
 **Fix:**
-1. Check that the JaCoCo plugin is in your `pom.xml` (see Step 14)
-2. Run Maven manually to generate the report:
+1. Check that the JaCoCo plugin is in your `pom.xml` (see Section 15)
+2. Run Maven manually:
    ```bash
    cd ~/my-company/inventory-service
    mvn test jacoco:report
    ```
-3. Check that this file was created:
-   ```bash
-   ls target/site/jacoco/jacoco.xml
-   ```
-4. If Maven fails, look at the error and fix your code first (the agent requires compilable code)
+3. Check that this file was created: `ls target/site/jacoco/jacoco.xml`
 
 ---
 
-### "Model not found" or "model not loaded"
+### "Model not found" or "model not loaded" (Docker)
 
-The AI model is not downloaded in Ollama.
+**Fix:**
+The entrypoint should have pulled the model automatically. Check the logs:
+
+```bash
+docker compose logs agent | head -50
+```
+
+If the pull failed (e.g., network timeout), pull manually:
+
+```bash
+docker compose run --rm agent bash -c \
+  'curl -X POST http://ollama:11434/api/pull \
+   -d "{\"name\":\"${AGENT_LLM_MODEL}\",\"stream\":false}" \
+   --max-time 1800'
+```
+
+---
+
+### "Model not found" or "model not loaded" (manual install)
 
 **Fix:** Pull the model manually:
+
 ```bash
 ollama pull codellama:7b-q4       # CPU model
 ollama pull codellama:13b-q4      # GPU 8 GB+ model
@@ -1074,11 +1247,9 @@ List downloaded models: `ollama list`
 
 ### "SpotBugs: BUILD FAILURE"
 
-Maven SpotBugs scan failed.
-
 **Fix:**
-1. Check that SpotBugs plugin is in your `pom.xml` (see Step 14)
-2. Run SpotBugs manually to see the error:
+1. Check that SpotBugs plugin is in your `pom.xml` (see Section 15)
+2. Run SpotBugs manually to see the full error:
    ```bash
    cd ~/my-company/inventory-service
    mvn spotbugs:check
@@ -1087,13 +1258,11 @@ Maven SpotBugs scan failed.
 
 ---
 
-### "dependency-check: command not found"
-
-The OWASP Dependency-Check tool is not installed or not in PATH.
+### "dependency-check: command not found" (manual install only)
 
 **Fix:**
 1. Verify it is installed: `dependency-check --version`
-2. If not found, redo Step 9
+2. If not found, redo Section 10
 3. Make sure the `bin/` directory is in your PATH
 
 ---
@@ -1102,7 +1271,15 @@ The OWASP Dependency-Check tool is not installed or not in PATH.
 
 The vulnerability database has not been downloaded yet.
 
-**Fix:** Run this once (requires internet, ~2 GB download):
+**Docker:**
+
+```bash
+docker compose run --rm agent \
+  dependency-check --updateonly --data /agent-output/nvd-data
+```
+
+**Manual install:**
+
 ```bash
 dependency-check --updateonly --data ~/agent-output/nvd-data
 ```
@@ -1111,10 +1288,8 @@ dependency-check --updateonly --data ~/agent-output/nvd-data
 
 ### Generated tests do not compile
 
-The AI sometimes generates test code with small errors.
-
 **What to do:**
-1. Check `~/agent-output/reports/llm-errors.log` for LLM output issues
+1. Check `agent-output/reports/llm-errors.log` for LLM output issues
 2. Look at the generated test file and fix the compilation error manually
 3. Common fixes:
    - Add a missing `import` statement at the top
@@ -1123,36 +1298,45 @@ The AI sometimes generates test code with small errors.
 
 ---
 
-### Out of memory during model loading
+### Docker image build fails at OWASP Dependency-Check download
 
-The AI model is too large for your system.
+The Dockerfile downloads the DC zip from GitHub during `docker build`. If your build
+machine has no internet access:
 
-**Fix:** Switch to a smaller model:
-1. Edit `config/config.yaml`:
-   ```yaml
-   llm:
-     model: "codellama:7b-q4"     # Smallest model, works on CPU with 8 GB RAM
-   ```
-2. Pull the smaller model: `ollama pull codellama:7b-q4`
+1. Download the zip manually: `dependency-check-9.2.0-release.zip` from GitHub releases
+2. Copy it into `code-agent/` before building
+3. Change the `RUN curl ...` line in the Dockerfile to `COPY dependency-check-9.2.0-release.zip /tmp/dc.zip`
 
 ---
 
-### "Permission denied" errors on Linux/macOS
+### Out of memory during model loading
 
-**Fix:**
-```bash
-chmod +x ~/code-agent/scripts/run_agent.sh
-chmod +x ~/code-agent/scripts/setup.sh
+**Fix:** Switch to a smaller model.
+
+**Docker:** Edit `docker-compose.yml`:
+
+```yaml
+- AGENT_LLM_MODEL=codellama:7b-q4
 ```
+
+**Manual install:** Edit `config/config.yaml`:
+
+```yaml
+llm:
+  model: "codellama:7b-q4"
+```
+
+Then pull: `ollama pull codellama:7b-q4`
 
 ---
 
 ### The agent ran but I don't see new test files
 
 **Check these things:**
-1. Did the run complete successfully? Check the log:
+1. Did the run complete successfully? Check logs:
    ```bash
-   cat ~/agent-output/reports/run.log
+   docker compose logs agent       # Docker
+   cat ~/agent-output/reports/run.log  # Manual
    ```
 2. Were the coverage targets already met? If your code is already 90%+ covered, no new tests are generated.
 3. Did you run with `--dry-run`? Dry-run never writes files. Remove that flag.
@@ -1160,46 +1344,75 @@ chmod +x ~/code-agent/scripts/setup.sh
 
 ---
 
-## 21. Quick Reference Card
+## 22. Quick Reference Card
 
-### Activate the Python environment
+### Docker commands
 
 ```bash
-# Linux/macOS/WSL2:
-source ~/code-agent/venv/bin/activate
+# Build the image (run once, or after code changes):
+docker compose build
 
-# Windows:
-C:\code-agent\venv\Scripts\activate.ps1
+# Run the full pipeline:
+docker compose up
+
+# Run and auto-remove the container when done:
+docker compose run --rm agent python3 agent/main.py
+
+# Dry-run (no writes):
+docker compose run --rm agent python3 agent/main.py --dry-run
+
+# Java only:
+docker compose run --rm agent python3 agent/main.py --repo java
+
+# Python only:
+docker compose run --rm agent python3 agent/main.py --repo python
+
+# Skip re-indexing (faster):
+docker compose run --rm agent python3 agent/main.py --skip-ingest
+
+# Skip security analysis:
+docker compose run --rm agent python3 agent/main.py --skip-analysis
+
+# Open a shell inside the container:
+docker compose run --rm agent bash
+
+# Follow logs while running:
+docker compose logs -f agent
+
+# Start Ollama only (for background scheduling):
+docker compose up -d ollama
+
+# Stop everything:
+docker compose down
 ```
 
-### Run the agent
+### Manual install commands
 
 ```bash
+# Activate the Python environment:
+source ~/unit-test-generator-agent/code-agent/venv/bin/activate  # Linux/macOS
+# OR
+C:\unit-test-generator-agent\code-agent\venv\Scripts\activate.ps1  # Windows
+
+# Run the agent:
 python3 agent/main.py                        # Full run (both Java + Python)
 python3 agent/main.py --repo java            # Java only
 python3 agent/main.py --repo python          # Python only
-python3 agent/main.py --dry-run             # Test run, no files written
-python3 agent/main.py --skip-ingest         # Skip re-indexing (faster)
-python3 agent/main.py --skip-analysis       # Skip security scans
+python3 agent/main.py --dry-run              # Test run, no files written
+python3 agent/main.py --skip-ingest          # Skip re-indexing (faster)
+python3 agent/main.py --skip-analysis        # Skip security scans
 ```
 
-### Override settings without editing config.yaml
+### Override settings without editing config.yaml (manual install)
 
 ```bash
-# Change the output folder:
 AGENT_OUTPUT_BASE=/my/custom/path python3 agent/main.py
-
-# Use a different AI model:
 AGENT_LLM_MODEL=codellama:13b-q4 python3 agent/main.py
-
-# Manually set the Ollama host:
 AGENT_OLLAMA_HOST=192.168.1.100 python3 agent/main.py
-
-# Point to a different Java repo:
 AGENT_JAVA_REPO=/path/to/other/repo python3 agent/main.py
 ```
 
-### Check if everything is connected
+### Check the resolved configuration (manual install)
 
 ```bash
 python3 agent/config.py     # Prints the full resolved configuration
@@ -1208,23 +1421,36 @@ python3 agent/config.py     # Prints the full resolved configuration
 ### View the latest report
 
 ```bash
-ls ~/agent-output/reports/                   # List all reports
-# Open the latest:
-xdg-open ~/agent-output/reports/*.html       # Linux
-open ~/agent-output/reports/*.html           # macOS
+# Docker (with bind mount ./agent-output):
+xdg-open ./agent-output/reports/*.html
+
+# Manual install on Linux:
+xdg-open ~/agent-output/reports/*.html
+
+# Manual install on macOS:
+open ~/agent-output/reports/*.html
 ```
 
 ### Check what models are downloaded in Ollama
 
 ```bash
+# Docker:
+docker compose run --rm ollama ollama list
+
+# Manual install:
 ollama list
 ```
 
 ### Rebuild ChromaDB from scratch
 
 ```bash
-rm -rf ~/agent-output/chromadb               # Delete existing database
-python3 agent/main.py --dry-run --skip-analysis   # Rebuild only (dry-run)
+# Docker:
+docker compose run --rm agent bash -c \
+  "rm -rf /agent-output/chromadb && python3 agent/main.py --dry-run --skip-analysis"
+
+# Manual install:
+rm -rf ~/agent-output/chromadb
+python3 agent/main.py --dry-run --skip-analysis
 ```
 
 ---

@@ -1,0 +1,77 @@
+version: "3.9"
+
+# ── Usage ──────────────────────────────────────────────────────────────────
+# 1. Edit the two volume bind-mounts under `agent` to point at your repos.
+# 2. Uncomment the GPU block under `ollama` if you have an NVIDIA card.
+# 3. Choose the right AGENT_LLM_MODEL line under `agent`.
+#
+# Build & run a full pipeline:
+#   docker compose up --build
+#
+# Dry-run (no writes):
+#   docker compose run --rm agent python3 agent/main.py --dry-run
+#
+# Analyse one language only:
+#   docker compose run --rm agent python3 agent/main.py --repo java
+#
+# Weekly cron (host crontab):
+#   0 2 * * 0 docker compose -f /path/to/docker-compose.yml run --rm agent
+# ───────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Ollama inference server ───────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: code-agent-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    restart: unless-stopped
+    # Uncomment for NVIDIA GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # ── Code-analysis agent ───────────────────────────────────────────────────
+  agent:
+    build:
+      context: ./code-agent
+      dockerfile: Dockerfile
+    container_name: code-agent
+    environment:
+      - AGENT_OLLAMA_HOST=ollama
+      - AGENT_OLLAMA_PORT=11434
+      - AGENT_OUTPUT_BASE=/agent-output
+      - AGENT_JAVA_REPO=/repos/java
+      - AGENT_PYTHON_REPO=/repos/python
+      - AGENT_PLATFORM=linux
+      # ── Pick one model (comment out the others) ──────────────────────────
+      - AGENT_LLM_MODEL=codellama:7b-q4          # CPU or < 8 GB VRAM
+      # - AGENT_LLM_MODEL=codellama:13b-q4        # 8–23 GB VRAM
+      # - AGENT_LLM_MODEL=qwen2.5-coder:32b       # 24+ GB VRAM
+    volumes:
+      # !! Change these two source paths to your actual repo locations:
+      - /path/to/your/springboot-app:/repos/java:ro
+      - /path/to/your/fastapi-app:/repos/python:ro
+      # Persistent output: reports, ChromaDB index, generated tests
+      - agent-output:/agent-output
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  ollama-models:   # persists Ollama model weights across container restarts
+  agent-output:    # persists reports, ChromaDB, and generated tests
